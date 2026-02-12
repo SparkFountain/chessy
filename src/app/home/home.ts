@@ -1,11 +1,10 @@
 import { Component } from '@angular/core';
+import { Board } from '../board/board';
 
 @Component({
   selector: 'app-home',
-  imports: [],
+  imports: [Board],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
-export class Home {
-
-}
+export class Home {}

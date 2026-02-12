@@ -1,0 +1,19 @@
+<div class="container">
+  @for (row of [7, 6, 5, 4, 3, 2, 1, 0]; track row) {
+    @for (col of [0, 1, 2, 3, 4, 5, 6, 7]; track col) {
+      <div class="field" [class.light]="(row + col) % 2 === 1" [class.dark]="(row + col) % 2 === 0">
+        @if (fields[row][col]) {
+          <fa-icon
+            [icon]="getIcon(fields[row][col])"
+            [border]="false"
+            class="piece"
+            [class.white]="fields[row][col].color === 'white'"
+            [class.black]="fields[row][col].color === 'black'"
+          ></fa-icon>
+        } @else {
+          {{ rowToLetter(row) }}{{ col + 1 }}
+        }
+      </div>
+    }
+  }
+</div>
