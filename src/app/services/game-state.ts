@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Piece } from '../classes/piece.class';
 import { PieceName } from '../enums/piece.enum';
 
@@ -6,64 +6,86 @@ import { PieceName } from '../enums/piece.enum';
   providedIn: 'root',
 })
 export class GameState {
-  pieces: Piece[] = [];
-  activePiece: Piece | null = null;
+  private readonly _pieces = signal<Piece[]>(this.resetBoard());
+  readonly pieces = this._pieces.asReadonly();
+
+  private readonly _activePiece = signal<Piece | null>(null);
+  readonly activePiece = this._activePiece.asReadonly();
 
   constructor() {
     this.resetBoard();
   }
 
-  resetBoard(): void {
-    this.pieces = [];
+  resetBoard(): Piece[] {
+    let pieces = [];
 
     // white pawns
     for (let i = 0; i < 8; i++) {
-      this.pieces.push(new Piece(1, PieceName.pawn, 'white', 1, i));
+      pieces.push(new Piece(1, PieceName.pawn, 'white', 1, i));
     }
 
     // white rooks
-    this.pieces.push(new Piece(2, PieceName.rook, 'white', 0, 0));
-    this.pieces.push(new Piece(3, PieceName.rook, 'white', 0, 7));
+    pieces.push(new Piece(2, PieceName.rook, 'white', 0, 0));
+    pieces.push(new Piece(3, PieceName.rook, 'white', 0, 7));
 
     // white knights
-    this.pieces.push(new Piece(4, PieceName.knight, 'white', 0, 1));
-    this.pieces.push(new Piece(5, PieceName.knight, 'white', 0, 6));
+    pieces.push(new Piece(4, PieceName.knight, 'white', 0, 1));
+    pieces.push(new Piece(5, PieceName.knight, 'white', 0, 6));
 
     // white bishops
-    this.pieces.push(new Piece(6, PieceName.bishop, 'white', 0, 2));
-    this.pieces.push(new Piece(7, PieceName.bishop, 'white', 0, 5));
+    pieces.push(new Piece(6, PieceName.bishop, 'white', 0, 2));
+    pieces.push(new Piece(7, PieceName.bishop, 'white', 0, 5));
 
     // white queen
-    this.pieces.push(new Piece(8, PieceName.queen, 'white', 0, 3));
+    pieces.push(new Piece(8, PieceName.queen, 'white', 0, 3));
 
     // white king
-    this.pieces.push(new Piece(9, PieceName.king, 'white', 0, 4));
+    pieces.push(new Piece(9, PieceName.king, 'white', 0, 4));
 
     // black pawns
     for (let i = 0; i < 8; i++) {
-      this.pieces.push(new Piece(10 + i, PieceName.pawn, 'black', 6, i));
+      pieces.push(new Piece(10 + i, PieceName.pawn, 'black', 6, i));
     }
 
     // black rooks
-    this.pieces.push(new Piece(18, PieceName.rook, 'black', 7, 0));
-    this.pieces.push(new Piece(19, PieceName.rook, 'black', 7, 7));
+    pieces.push(new Piece(18, PieceName.rook, 'black', 7, 0));
+    pieces.push(new Piece(19, PieceName.rook, 'black', 7, 7));
 
     // black knights
-    this.pieces.push(new Piece(20, PieceName.knight, 'black', 7, 1));
-    this.pieces.push(new Piece(21, PieceName.knight, 'black', 7, 6));
+    pieces.push(new Piece(20, PieceName.knight, 'black', 7, 1));
+    pieces.push(new Piece(21, PieceName.knight, 'black', 7, 6));
 
     // black bishops
-    this.pieces.push(new Piece(22, PieceName.bishop, 'black', 7, 2));
-    this.pieces.push(new Piece(23, PieceName.bishop, 'black', 7, 5));
+    pieces.push(new Piece(22, PieceName.bishop, 'black', 7, 2));
+    pieces.push(new Piece(23, PieceName.bishop, 'black', 7, 5));
 
     // black queen
-    this.pieces.push(new Piece(24, PieceName.queen, 'black', 7, 3));
+    pieces.push(new Piece(24, PieceName.queen, 'black', 7, 3));
 
     // black king
-    this.pieces.push(new Piece(25, PieceName.king, 'black', 7, 4));
+    pieces.push(new Piece(25, PieceName.king, 'black', 7, 4));
+
+    return pieces;
   }
 
   createRandomPiece(): void {
     // this.fields[0][0] = new Piece(PieceName.bishop, 'white');
+  }
+
+  selectField(row: number, column: number): void {
+    const piece = this._pieces().find((piece) => piece.row === row && piece.column === column);
+
+    if (piece) {
+      if (piece === this.activePiece()) {
+        this._activePiece.set(null);
+      } else {
+        this._activePiece.set(piece);
+      }
+    } else {
+      if (this.activePiece()) {
+        this._activePiece()!.row = row;
+        this._activePiece()!.column = column;
+      }
+    }
   }
 }

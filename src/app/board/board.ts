@@ -22,6 +22,8 @@ export class Board {
   fields: Array<Array<Piece | null>> = [];
 
   private gameState: GameState = inject(GameState);
+  pieces = this.gameState.pieces;
+  activePiece = this.gameState.activePiece;
 
   constructor() {
     this.initBoard();
@@ -42,12 +44,16 @@ export class Board {
 
   initBoard(): void {
     this.fields = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => null));
-    this.gameState.pieces.forEach((piece) => {
-      this.fields[piece.row][piece.column] = piece;
+    this.pieces().forEach((piece) => {
+      this.fields[piece?.row][piece?.column] = piece;
     });
   }
 
   rowToLetter(row: number): string {
     return String.fromCharCode(65 + row);
+  }
+
+  selectField(row: number, column: number): void {
+    this.gameState.selectField(row, column);
   }
 }

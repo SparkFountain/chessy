@@ -5,6 +5,7 @@
   width: 100%;
   height: 100%;
   gap: 0; // keine Lücken zwischen Feldern
+  cursor: pointer;
 }
 
 .field {
@@ -35,6 +36,11 @@
 
   &.black {
     color: black;
+  }
+
+  &.selected {
+    font-size: 230%;
+    color: red;
   }
 }
 
