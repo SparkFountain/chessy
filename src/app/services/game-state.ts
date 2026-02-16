@@ -68,23 +68,26 @@ export class GameState {
     return pieces;
   }
 
-  createRandomPiece(): void {
-    // this.fields[0][0] = new Piece(PieceName.bishop, 'white');
+  getPiece(row: number, column: number): Piece | null {
+    return this._pieces().find((piece) => piece.row === row && piece.column === column) || null;
   }
 
   selectField(row: number, column: number): void {
     const piece = this._pieces().find((piece) => piece.row === row && piece.column === column);
+
+    if (this.activePiece()) {
+      this._activePiece()!.row = row;
+      this._activePiece()!.column = column;
+      this._activePiece.set(null);
+
+      return;
+    }
 
     if (piece) {
       if (piece === this.activePiece()) {
         this._activePiece.set(null);
       } else {
         this._activePiece.set(piece);
-      }
-    } else {
-      if (this.activePiece()) {
-        this._activePiece()!.row = row;
-        this._activePiece()!.column = column;
       }
     }
   }

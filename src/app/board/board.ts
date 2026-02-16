@@ -19,15 +19,13 @@ import { GameState } from '../services/game-state';
   styleUrl: './board.scss',
 })
 export class Board {
-  fields: Array<Array<Piece | null>> = [];
-
   private gameState: GameState = inject(GameState);
   pieces = this.gameState.pieces;
   activePiece = this.gameState.activePiece;
 
-  constructor() {
-    this.initBoard();
-  }
+  getPiece = this.gameState.getPiece.bind(this.gameState);
+
+  constructor() {}
 
   private iconMap = {
     King: faChessKing,
@@ -40,13 +38,6 @@ export class Board {
 
   getIcon(piece: Piece): IconDefinition {
     return this.iconMap[piece.name];
-  }
-
-  initBoard(): void {
-    this.fields = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => null));
-    this.pieces().forEach((piece) => {
-      this.fields[piece?.row][piece?.column] = piece;
-    });
   }
 
   rowToLetter(row: number): string {

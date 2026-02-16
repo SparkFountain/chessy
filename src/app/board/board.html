@@ -7,14 +7,14 @@
         [class.dark]="(row + col) % 2 === 0"
         (click)="selectField(row, col)"
       >
-        @if (fields[row][col]) {
+        @if (getPiece(row, col); as piece) {
           <fa-icon
-            [icon]="getIcon(fields[row][col])"
+            [icon]="getIcon(piece)"
             [border]="false"
             class="piece"
-            [class.white]="fields[row][col].color === 'white'"
-            [class.black]="fields[row][col].color === 'black'"
-            [class.selected]="fields[row][col] === activePiece()"
+            [class.white]="piece.color === 'white'"
+            [class.black]="piece.color === 'black'"
+            [class.selected]="piece === activePiece()"
           ></fa-icon>
         }
       </div>
