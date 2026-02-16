@@ -73,11 +73,23 @@ export class GameState {
   }
 
   getPiece(row: number, column: number): Piece | null {
-    return this._pieces().find((piece) => piece.row === row && piece.column === column) || null;
+    return (
+      this._pieces().find(
+        (piece) => piece.row === row && piece.column === column && !piece.captured,
+      ) || null
+    );
   }
 
   selectField(row: number, column: number): void {
-    const piece = this._pieces().find((piece) => piece.row === row && piece.column === column);
+    const selectedPiece: Piece | undefined = this._pieces().find(
+      (piece) => piece.row === row && piece.column === column && !piece.captured,
+    );
+
+    // if another piece of active color is selected, simply update it
+    if (selectedPiece && selectedPiece.color === this.activePieceColor()) {
+      this._activePiece.set(selectedPiece);
+      return;
+    }
 
     // active piece: check whether move is legal
     if (this.activePiece()) {
@@ -123,6 +135,11 @@ export class GameState {
         this._activePiece()!.column = column;
         console.log(`>>> ${this.activePiece()!.name} moved to (${x2}, ${y2})`);
 
+        // capture?
+        if (selectedPiece) {
+          selectedPiece.captured = true;
+        }
+
         // pawn promotion?
         if (this.activePiece()!.name === PieceName.pawn && (y2 === 0 || y2 === 7)) {
           console.log(`>>> ${this.activePiece()!.name} promoted`);
@@ -135,25 +152,30 @@ export class GameState {
 
         // checkmate?
         // TODO: implement checkmate detection
+
+        // change active piece color
+        console.log('>>> color changed');
+        this._activePieceColor.set(
+          this._activePieceColor() === PieceColor.white ? PieceColor.black : PieceColor.white,
+        );
+
+        // clear active piece
+        this._activePiece.set(null);
       } else {
         console.log(`>>> ${this.activePiece()!.name} cannot move to (${x2}, ${y2})`);
       }
 
-      // clear active piece in any case
-      this._activePiece.set(null);
       return;
     }
 
-    if (piece) {
-      if (piece === this.activePiece()) {
+    if (selectedPiece) {
+      console.log(`>>> Selected piece: ${selectedPiece.name} (${selectedPiece.color})`);
+      if (selectedPiece === this.activePiece()) {
         this._activePiece.set(null);
       }
 
-      if (piece.color === this.activePieceColor()) {
-        this._activePiece.set(piece);
-        this._activePieceColor.set(
-          this._activePieceColor() === PieceColor.white ? PieceColor.black : PieceColor.white,
-        );
+      if (selectedPiece.color === this.activePieceColor()) {
+        this._activePiece.set(selectedPiece);
       }
     }
   }
@@ -224,22 +246,39 @@ export class GameState {
   }
 
   isLegalRookMove(x1: number, y1: number, x2: number, y2: number): boolean {
-    // Horizontal or vertical move
-    const dx = Math.abs(x2 - x1);
-    const dy = Math.abs(y2 - y1);
+    if (x1 !== x2 && y1 !== y2) {
+      return false;
+    }
 
-    // Check whether no pieces are in the way
-    for (let i = 1; i < dx; i++) {
-      const x = x1 + (x2 > x1 ? i : -i);
-      const y = y1 + (y2 > y1 ? i : -i);
-      const pieceInWay = this.getPiece(y, x);
+    // horizontal
+    if (y1 === y2) {
+      const startX = Math.min(x1, x2);
+      const endX = Math.max(x1, x2);
 
-      if (pieceInWay && pieceInWay.color === this.activePieceColor()) {
-        return false;
+      for (let x = startX + 1; x < endX; x++) {
+        const pieceInWay = this.getPiece(y1, x);
+
+        if (pieceInWay && pieceInWay.color === this.activePieceColor()) {
+          return false;
+        }
       }
     }
 
-    return (dx === 0 && dy > 0) || (dx > 0 && dy === 0);
+    // vertical
+    if (x1 === x2) {
+      const startY = Math.min(y1, y2);
+      const endY = Math.max(y1, y2);
+
+      for (let y = startY + 1; y < endY; y++) {
+        const pieceInWay = this.getPiece(y, x1);
+
+        if (pieceInWay && pieceInWay.color === this.activePieceColor()) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   isLegalQueenMove(x1: number, y1: number, x2: number, y2: number): boolean {

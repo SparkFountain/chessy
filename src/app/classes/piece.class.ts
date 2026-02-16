@@ -7,7 +7,7 @@ export class Piece {
   color: PieceColor;
   row: number;
   column: number;
-  active: boolean;
+  captured: boolean;
   moved: boolean;
 
   constructor(id: number, name: PieceName, color: PieceColor, row: number, column: number) {
@@ -16,7 +16,7 @@ export class Piece {
     this.color = color;
     this.row = row;
     this.column = column;
-    this.active = true;
+    this.captured = false;
     this.moved = false;
   }
 }
