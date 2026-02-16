@@ -1,6 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { Piece } from '../classes/piece.class';
-import { PieceName } from '../enums/piece.enum';
 import { FontAwesomeModule, IconDefinition } from '@fortawesome/angular-fontawesome';
 import {
   faChessKing,

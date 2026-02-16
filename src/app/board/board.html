@@ -12,8 +12,7 @@
             [icon]="getIcon(piece)"
             [border]="false"
             class="piece"
-            [class.white]="piece.color === 'white'"
-            [class.black]="piece.color === 'black'"
+            [class]="piece.color"
             [class.selected]="piece === activePiece()"
           ></fa-icon>
         }
