@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { Piece } from '../classes/piece.class';
 import { PieceName } from '../enums/piece.enum';
 import { PieceColor } from '../enums/piece-color.enum';
+import { CastlingSide } from '../enums/castling-side.enum';
 
 @Injectable({
   providedIn: 'root',
@@ -15,6 +16,9 @@ export class GameState {
 
   private readonly _activePieceColor = signal<PieceColor>(PieceColor.white);
   readonly activePieceColor = this._activePieceColor.asReadonly();
+
+  private readonly _castlingSide = signal<CastlingSide | null>(null);
+  readonly castlingSide = this._castlingSide.asReadonly();
 
   constructor() {
     this.resetBoard();
@@ -86,20 +90,22 @@ export class GameState {
     );
 
     // if another piece of active color is selected, simply update it
-    if (selectedPiece && selectedPiece.color === this.activePieceColor()) {
+    if (!this.activePiece() && selectedPiece && selectedPiece.color === this.activePieceColor()) {
       this._activePiece.set(selectedPiece);
       return;
     }
 
     // active piece: check whether move is legal
     if (this.activePiece()) {
+      // get coordinates of active piece and clicked field
       const x1 = this.activePiece()!.column;
       const y1 = this.activePiece()!.row;
       const x2 = column;
       const y2 = row;
 
       // deactivate piece if same field is clicked
-      if (x1 === x2 && y1 === y2) {
+      if (this.activePiece()!.column === column && this.activePiece()!.row === row) {
+        console.log(`>>> Deactivating piece`);
         this._activePiece.set(null);
         return;
       }
@@ -135,6 +141,35 @@ export class GameState {
         this._activePiece()!.column = column;
         console.log(`>>> ${this.activePiece()!.name} moved to (${x2}, ${y2})`);
 
+        // castling?
+        if (this.castlingSide()) {
+          console.log(`>>> Castling ${this.castlingSide()}`);
+
+          let rook: Piece | null = null;
+          switch (this.castlingSide()) {
+            case CastlingSide.kingside:
+              rook = this.pieces().find(
+                (p) =>
+                  p.name === PieceName.rook &&
+                  p.color === this.activePiece()!.color &&
+                  p.column === 7,
+              )!;
+              rook.column = 5;
+              break;
+            case CastlingSide.queenside:
+              rook = this.pieces().find(
+                (p) =>
+                  p.name === PieceName.rook &&
+                  p.color === this.activePiece()!.color &&
+                  p.column === 0,
+              )!;
+              rook.column = 3;
+              break;
+          }
+
+          this._castlingSide.set(null);
+        }
+
         // capture?
         if (selectedPiece) {
           selectedPiece.captured = true;
@@ -148,13 +183,16 @@ export class GameState {
         }
 
         // check?
-        // TODO: implement check detection
+        if (this.activePieceColor() === PieceColor.white) {
+          // TODO: implement check detection for black pieces
+        } else {
+          // TODO: implement check detection for white pieces
+        }
 
         // checkmate?
         // TODO: implement checkmate detection
 
         // change active piece color
-        console.log('>>> color changed');
         this._activePieceColor.set(
           this._activePieceColor() === PieceColor.white ? PieceColor.black : PieceColor.white,
         );
@@ -287,7 +325,55 @@ export class GameState {
   }
 
   isLegalKingMove(x1: number, y1: number, x2: number, y2: number, color: PieceColor): boolean {
-    // TODO: implement king movement
-    return false;
+    // one square in any direction
+    const dx = Math.abs(x2 - x1);
+    const dy = Math.abs(y2 - y1);
+
+    // get active king piece
+    const king: Piece = this.getPiece(y1, x1)!;
+    let rook: Piece | null = null;
+
+    // castling
+    const validRow = this._activePieceColor() === PieceColor.white ? 0 : 7;
+    if (y1 === validRow && y2 === validRow && x1 === 4 && x2 === 6) {
+      // kingside
+      rook = this.getPiece(validRow, 7);
+      if (
+        king.hasMoved ||
+        !rook ||
+        rook.name !== PieceName.rook ||
+        rook.color !== this._activePieceColor() ||
+        rook.hasMoved ||
+        this.getPiece(validRow, 5) !== null ||
+        this.getPiece(validRow, 6) !== null
+      ) {
+        return false;
+      }
+
+      this._castlingSide.set(CastlingSide.kingside);
+      return true;
+    } else if (y1 === validRow && y2 === validRow && x1 === 4 && x2 === 2) {
+      // queenside
+      rook = this.getPiece(validRow, 0);
+      if (
+        king.hasMoved ||
+        !rook ||
+        rook.name !== PieceName.rook ||
+        rook.color !== this._activePieceColor() ||
+        rook.hasMoved
+      ) {
+        return false;
+      }
+
+      this._castlingSide.set(CastlingSide.queenside);
+      return true;
+    }
+
+    // normal move
+    if (dx > 1 || dy > 1) {
+      return false;
+    }
+
+    return true;
   }
 }
